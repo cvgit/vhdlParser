@@ -15,6 +15,7 @@ First, how to get this running?
   - Run: pip install antlr4-python3-runtime
 - Make sure you have Java installed (>1.7 i believe)
 - Get the grammar: https://github.com/antlr/grammars-v4/blob/master/vhdl/vhdl.g4
+- Rename "range" to "s_range" or so, because range conflicts with python keyword
 - Run: java -jar antlr-4.5.3-complete.jar -visitor -Dlanguage=Python3 -package vhdl -o vhdl vhdl.g4
   - this assumes java to be in $PATH
   - antlr-4.5.3-compete.jar to be in current directory
