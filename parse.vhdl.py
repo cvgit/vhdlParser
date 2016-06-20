@@ -17,16 +17,8 @@ from antlr4.tree.Trees import Trees
 from collections import defaultdict
 
 
-class UniqueList(list):
-    """Class derrived from list. It overrides the append method 
-    only to append an object to its member if it is unique to that member    
-    """
-    def append(self, item):
-        if not item in self:
-            #from UniqueList's parent (=list), take "self"
-            super(UniqueList,self).append(item)
-
-class TreeStorage(UniqueList):
+#Data structure
+class TreeStorage():
     """Tree data structure with parents and children
     """
     #keep track of instantiations
@@ -48,13 +40,20 @@ class TreeStorage(UniqueList):
             self.type = args[0]
         #parental links    
         self.children = []
-        self.parent = []
-        #empty dictionary/list
+        self.parent = None
+        #empty dictionary
         self.data = {}
+        #empty string
         self.text = ""
         #counter used for a.o. printing of tree
         self._depth = 0
     
+    def delete(self):
+        if self._depth == 0:
+            Trees.remove(self)
+        else:
+            self.parent.children.remove(self)
+        del self
     
     #add a child/branch to a node or tree
     #define parental relationship
@@ -89,34 +88,38 @@ class TreeStorage(UniqueList):
     #get children of object
     def getChildren(self):
         return self.children
+        
+    def getFirstChildofType(self,type):
+        return next(x for x in self.children if x.type == type)
     
     #get siblings of object, including object, also for roots
     def getSiblings(self):
-        if self.depth == 0:
+        if self._depth == 0:
             return [tree for tree in TreeStorage.getTrees() if tree is not self]
         else:
             return [sibling for sibling in self.parent.children if self is not sibling]
-    
+ 
+    def getFirstSiblingofType(self,type):
+        return [x for x in self.getSiblings() if x.type == type][0]
+        
     #check if object has children
     def hasChildren(self):
         return not not self.children
         
     #quick and dirty print of a tree originating from any object
     def printSubTree(self):
-        if self.text == "":
-            print("|   "*self._depth + self.type)
-        else:
-            print("|   "*self._depth + self.text + "(" + self.type +")")
+        text = "|   "*self._depth
+        text = text + self.text
+        if not self.type == "":
+            text = text + " ("+self.type+")"
+        print(text)
+        if not self.data == {}:
+            for entry in self.data.keys():
+                print("|   "*self._depth + "  -> " + entry + ":" + str(self.data[entry]))
+        
         if self.hasChildren():
             for child in self.children:
-                child.printSubTree()    
-    
-    #same with more info
-    def printDetailedSubTree(self):
-        print("|   "*self.depth + "{}: {}".format(self.type,self.text))
-        if self.hasChildren():
-            for child in self.children:
-                child.printDetailedSubTree()   
+                child.printSubTree()     
                 
     def printTree():
         for tree in TreeStorage.Trees:
@@ -130,16 +133,21 @@ class TreeStorage(UniqueList):
         return TreeStorage.Trees
         
     #return first ancestor of certain type, if any.
-    def hasAncestor(self,type):
-        try:
-            if self.parent.name == type:
-                return self.parent
-            else:
-                self.parent.hasAncestor(type)
-        except:
+    def getAncestor(self,type):
+        if self.parent is None:
             return False
-        
-        
+        elif self.parent.type == type:
+            return self.parent
+        else:
+            return self.parent.getAncestor(type)
+                
+    def hasAncestor(self,type):
+        result = self.getAncestor(type)
+        if result is False:
+            return False
+        else:
+            return True
+
     #get all children, grandchildren etc of node
     _level = 0              
     _list = []
@@ -154,17 +162,64 @@ class TreeStorage(UniqueList):
             TreeStorage._list = []
             return childrenlist
     
-    #get all children, grandchilrren of node with particular type
+    #get all children, grandchildren of node with particular type
     def getAllChildrenOfType(self,type):
         return [x for x in self.getAllChildren() if x.type == type]
-        
+            
+    def mergeSelectedName(self):
+        for x in self.getAllChildrenOfType("Selected_name"):
+            name = ""
+            for y in x.getAllChildrenOfType("Identifier"):
+                if not name == "":
+                    name = name + "."
+                name = name + y.text
+                y.delete()
+            x.text = name
             
     def extractlib(self):
-        print(self.getAllChildrenOfType("Identifier"))
-        print ([x.text for x in self.getAllChildrenOfType("Identifier") if x.hasAncestor("library_clause")]) 
+        for x in [x for x in self.getAllChildrenOfType("Identifier") if x.hasAncestor("Library_clause")]:
+            x.getAncestor("Design_unit").data.setdefault("libs",[]).append(x.text)
+            x.delete()
+           
+    #run mergeSelectedName first
+    def extractuse(self):
+        for x in [x for x in self.getAllChildrenOfType("Selected_name") if x.hasAncestor("Use_clause")]:
+            x.getAncestor("Design_unit").data.setdefault("use",[]).append(x.text)
+            x.delete()    
+
+    #run mergeSelectedName first
+    def extractgenerics(self):
+        for x in [x for x in self.getAllChildrenOfType("Identifier") if x.hasAncestor("Generic_clause")]:
+            if x.parent.type == "Identifier_list":
+                generic = x
+                type = x.parent.getFirstSiblingofType("Subtype_indication").getFirstChildofType("Selected_name")
+                x.getAncestor("Design_unit").data.setdefault("generic",[]).append({generic.text:type.text})
+                x.delete()
+                type.delete()
+            elif x.parent.type == "Enumeration_literal":
+                x.getAncestor("Design_unit").data.setdefault("extconstants",[]).append({x.text:"generic_constant"})
+                x.delete()
+            
+            
+    #remove all dead branches
+    def clean(self):
+        if self.text == "" and self.data == {} and self.children == []:
+            self.delete()
+            return True        
+        repeat = False
+        for x in self.children:
+            res = x.clean()
+            repeat = repeat or res      
+        if repeat:
+            self.clean()
+        return repeat
+
         
 
-    
+            
+
+
+#function to generate overruling class
 def generate_stubbed_class(klass_name, klass):
     """Returns a function call to create a class derrived from "klass",
     named "klass_name" which autogenerates a bunch of override methods 
@@ -174,51 +229,55 @@ def generate_stubbed_class(klass_name, klass):
     by ANTLR so to set an attribute XXXX True upon entering and False 
     upon exit.
     """
+    #override enter_NAME to add a branch and cling to it
     def generate_stub_enter(name):
         def stub(self, ctx):
-            # toggle variable with name of rule
             self.makeBranchAndClimb(name)
-        return stub
+        return stub #return method
         
+    #override exit_NAME to back down one branch   
     def generate_stub_exit(name):
         def stub(self, ctx):
-            # toggle variable with name of rule
             self.climbBack()
-        return stub
-    
+        return stub #return method
+        
+    #empty list of attributes
     attributes = {}
     
     for name in dir(klass): # lists all attributes (names only)
         try:
             #match uppercase, but don't absorb it
+            #split enterIdentifier in [], "enter", "Identifier", []
             oper, key = re.split('(^enter|^exit)(.*)',name,1)[1:3]
         except ValueError:
             # not in the format of SOMETHING_SOMETHING
-            continue
-        attr = getattr(klass, name)
-        
-        #skip inherited rule
+            continue #try next
+            
+        #skip inherited rule which is called every time
         if key == 'EveryRule':
             continue
-        
+            
+        #additional check    
+        attr = getattr(klass, name)        
         # make sure it's a function and name ends in _enter or _exit
         if callable(attr) and oper in ('enter', 'exit'):
+            #call method generation function
             if oper == 'enter': # True for 'enter', False for 'exit'
                 attributes[name] = generate_stub_enter(key)
             else:
                 attributes[name] = generate_stub_exit(key)
-    
+    #return a class, inheriting from klass, with generated attributes
     return type(klass_name, (klass,), attributes)
 
-
-
-    
+#L istener class    
 class L(generate_stubbed_class('MyClass', vhdlListener)):
     """Class which overrides methods defined in myclass, which 
     were automatically derrived from vhdlListener
     """  
     def __init__(self, filename):
+        #instantiate a tree storage structure
         self.root = TreeStorage(filename,"file")
+        #set pointer
         self.tree = self.root
         
     def makeBranchAndClimb(self, type):
@@ -230,50 +289,52 @@ class L(generate_stubbed_class('MyClass', vhdlListener)):
     def printTree(self):
         self.root.printDetailedSubTree()
         
-    #overrule one more time to store it's text
+    #overrule one more time to store its text
+    #basically this is all we want
     def enterIdentifier(self,ctx):
         super(L,self).enterIdentifier(ctx)
         self.tree.addText(ctx.getText())
-        
-class vhdlProcessTree(TreeStorage):
-    list = []
-    level = 0
       
         
 def main(argv):
     filename = argv[1]
     print("reading file {}".format(filename))
+    
+    #take input
     input = FileStream(filename)
+    
+    #translate vhdl source into tokens
     lexer = vhdlLexer(input)
-    while True:
-        token = lexer.nextToken()
-        #print(token)
-        #print("tokenID {} = {}".format(token.type,vhdlLexer.symbolicNames[token.type]))
-        if token.type == vhdlParser.EOF:
-            break
-    # go back to first token
-    lexer.reset()
     
     #list of tokens
     stream = CommonTokenStream(lexer)
     
-    parser = vhdlParser(stream)
     #looking up vhdl.g4
+    #and match token stream to grammar
+    parser = vhdlParser(stream)
+    
+    #start tree at main entrance
     tree = parser.design_file()
     walker = ParseTreeWalker()
     
-    #create member of class L, performing actions on enterSmth, exitSmth
-    #defined in vhdlListener
+    #create member of class L
     listener = L(filename)
     
     #walk the listener through the tree
     walker.walk(listener, tree)
     
+    #take tree representation of code
     tree = listener.tree
-    tree.printSubTree()
+    
+    tree.mergeSelectedName() #important to be first
     tree.extractlib()
+    tree.extractuse()
+    tree.extractgenerics()
+    tree.clean()
     
     
+    #print that tree
+    tree.printSubTree()
     
 if __name__ == '__main__':
     main(sys.argv)
