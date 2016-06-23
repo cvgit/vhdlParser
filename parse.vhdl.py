@@ -107,6 +107,12 @@ class TreeStorage():
     def hasChildren(self):
         return not not self.children
         
+    def hasChildNamed(self, name):
+        for child in self.children:
+            if child.name == name:
+                return True
+        return False
+        
     #quick and dirty print of a tree originating from any object
     def printSubTree(self):
         text = "|   "*self._depth
@@ -170,6 +176,7 @@ class TreeStorage():
     def getAllChildrenOfType(self,type):
         return [x for x in self.getAllChildren() if x.type == type]
             
+    #first step, merge Identifiers into Selected_Name
     def mergeSelectedName(self):
         for x in self.getAllChildrenOfType("Selected_name"):
             name = ""
@@ -180,45 +187,91 @@ class TreeStorage():
                 y.setPurge()
             x.text = name
         self.purge()
+    
+    def extractDesignUnit(self):
+        for x in [x for x in self.getAllChildrenOfType("Design_unit")]:
+            x.extractlib()
+            x.extractuse()
+            x.extractentity()
+            x.extractarchitecture()
+            x.purge()
+        self.clean()
         
+    #extract lib
     def extractlib(self):
         for x in [x for x in self.getAllChildrenOfType("Identifier") if x.hasAncestor("Library_clause")]:
-            x.getAncestor("Design_unit").data.setdefault("libs",[]).append(x.text)
+            self.data.setdefault("libs",[]).append(x.text)
             x.setPurge()
         self.purge()
-        
+    
+    #extract use
     #run mergeSelectedName first
     def extractuse(self):
         for x in [x for x in self.getAllChildrenOfType("Selected_name") if x.hasAncestor("Use_clause")]:
-            x.getAncestor("Design_unit").data.setdefault("use",[]).append(x.text)
+            self.data.setdefault("use",[]).append(x.text)
             x.setPurge()    
         self.purge()
-        
+
+    def extractentity(self):
+         for x in [x for x in self.getAllChildrenOfType("Entity_declaration")]:
+            x.data.setdefault("entity",[]).append(x.getFirstChildofType("Identifier").text)
+            #kill end architecture XXXXX
+            for y in [y for y in x.children if y.type == "Identifier"]:
+                y.setPurge()
+            x.purge()
+            x.extractgenerics()
+            x.extractentityport()
+            
+    #extract generics
     #run mergeSelectedName first
     def extractgenerics(self):
         for x in [x for x in self.getAllChildrenOfType("Identifier") if x.hasAncestor("Generic_clause")]:
             if x.parent.type == "Identifier_list":
                 generic = x
                 type = x.parent.getFirstSiblingofType("Subtype_indication").getFirstChildofType("Selected_name")
-                x.getAncestor("Design_unit").data.setdefault("generic",[]).append({generic.text:type.text})
+                self.data.setdefault("generic",[]).append({generic.text:type.text})
                 x.setPurge()
                 type.setPurge()
             elif x.parent.type == "Enumeration_literal":
-                x.getAncestor("Design_unit").data.setdefault("extconstants",[]).append({x.text:"generic_constant"})
+                self.data.setdefault("extconstants",[]).append({x.text:"generic_constant"})
                 x.setPurge()
         self.purge()
         
+
     #run mergeSelectedName first
     def extractentityport(self):
-        for x in [x for x in self.getAllChildrenOfType("Identifier") if x.hasAncestor("Port_clause") and x.hasAncestor("Entity_header")]:
+        for x in [x for x in self.getAllChildrenOfType("Port_clause")]:
+            x.extractsignals()
+     
+    def extractarchitecture(self):
+        for x in [x for x in self.getAllChildrenOfType("Architecture_body")]:
+            names = [y for y in x.children if y.type == "Identifier"]
+            x.data.setdefault("architecture",[]).append(names[0].text)
+            x.data.setdefault("entity",[]).append(names[1].text)
+            for y in names:
+                y.setPurge()
+            x.extractarchdeclarations()
+        self.purge()
+    
+    def extractarchdeclarations(self):
+        for x in [x for x in self.getAllChildrenOfType("Architecture_declarative_part")]:
+            for y in [y for y in self.getAllChildrenOfType("Signal_declaration")]:
+                y.extractsignals()
+                y.setPurge()
+                x.data.setdefault("signallist",[]).append(y.data["signallist"])
+                y.setPurge()
+            x.purge()
+            
+    def extractsignals(self):
+        for x in [x for x in self.getAllChildrenOfType("Identifier")]:
             if x.parent.type == "Identifier_list":
                 signal = x
                 type = x.parent.getFirstSiblingofType("Subtype_indication").getFirstChildofType("Selected_name")
-                x.getAncestor("Design_unit").data.setdefault("entityport",[]).append({signal.text:type.text})
+                self.data.setdefault("signallist",[]).append({signal.text:type.text})
                 x.setPurge()
                 type.setPurge()
-        self.purge()
-            
+        self.purge()       
+        
     #remove branches marked to purge
     def purge(self):
         #first kill the children
@@ -352,11 +405,7 @@ def main(argv):
     tree = listener.tree
     
     tree.mergeSelectedName() #important to be first
-    tree.extractlib()
-    tree.extractuse()
-    tree.extractgenerics()
-    tree.extractentityport()
-    tree.clean()
+    tree.extractDesignUnit()
     
     
     #print that tree
