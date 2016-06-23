@@ -46,6 +46,7 @@ class TreeStorage():
         #empty string
         self.text = ""
         #counter used for a.o. printing of tree
+        self._purge = False
         self._depth = 0
     
     def delete(self):
@@ -90,7 +91,7 @@ class TreeStorage():
         return self.children
         
     def getFirstChildofType(self,type):
-        return next(x for x in self.children if x.type == type)
+        return [x for x in self.children if x.type == type][0]
     
     #get siblings of object, including object, also for roots
     def getSiblings(self):
@@ -147,6 +148,9 @@ class TreeStorage():
             return False
         else:
             return True
+            
+    def setPurge(self):
+        self._purge = True
 
     #get all children, grandchildren etc of node
     _level = 0              
@@ -173,20 +177,23 @@ class TreeStorage():
                 if not name == "":
                     name = name + "."
                 name = name + y.text
-                y.delete()
+                y.setPurge()
             x.text = name
-            
+        self.purge()
+        
     def extractlib(self):
         for x in [x for x in self.getAllChildrenOfType("Identifier") if x.hasAncestor("Library_clause")]:
             x.getAncestor("Design_unit").data.setdefault("libs",[]).append(x.text)
-            x.delete()
-           
+            x.setPurge()
+        self.purge()
+        
     #run mergeSelectedName first
     def extractuse(self):
         for x in [x for x in self.getAllChildrenOfType("Selected_name") if x.hasAncestor("Use_clause")]:
             x.getAncestor("Design_unit").data.setdefault("use",[]).append(x.text)
-            x.delete()    
-
+            x.setPurge()    
+        self.purge()
+        
     #run mergeSelectedName first
     def extractgenerics(self):
         for x in [x for x in self.getAllChildrenOfType("Identifier") if x.hasAncestor("Generic_clause")]:
@@ -194,14 +201,31 @@ class TreeStorage():
                 generic = x
                 type = x.parent.getFirstSiblingofType("Subtype_indication").getFirstChildofType("Selected_name")
                 x.getAncestor("Design_unit").data.setdefault("generic",[]).append({generic.text:type.text})
-                x.delete()
-                type.delete()
+                x.setPurge()
+                type.setPurge()
             elif x.parent.type == "Enumeration_literal":
                 x.getAncestor("Design_unit").data.setdefault("extconstants",[]).append({x.text:"generic_constant"})
+                x.setPurge()
+        self.purge()
+        
+    #run mergeSelectedName first
+    def extractentityport(self):
+        for x in [x for x in self.getAllChildrenOfType("Identifier") if x.hasAncestor("Port_clause") and x.hasAncestor("Entity_header")]:
+            if x.parent.type == "Identifier_list":
+                signal = x
+                type = x.parent.getFirstSiblingofType("Subtype_indication").getFirstChildofType("Selected_name")
+                x.getAncestor("Design_unit").data.setdefault("entityport",[]).append({signal.text:type.text})
+                x.setPurge()
+                type.setPurge()
+        self.purge()
+            
+    #remove branches marked to purge
+    def purge(self):
+        #first kill the children
+        for x in self.getAllChildren():
+            if x._purge:
                 x.delete()
-            
-            
-    #remove all dead branches
+        
     def clean(self):
         if self.text == "" and self.data == {} and self.children == []:
             self.delete()
@@ -213,6 +237,7 @@ class TreeStorage():
         if repeat:
             self.clean()
         return repeat
+
 
         
 
@@ -330,6 +355,7 @@ def main(argv):
     tree.extractlib()
     tree.extractuse()
     tree.extractgenerics()
+    tree.extractentityport()
     tree.clean()
     
     
