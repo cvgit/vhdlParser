@@ -2,25 +2,23 @@ reading file ../vhdlparser/spaceinvaders.vhd
  (file)
 |    (Design_file)
 |   |    (Design_unit)
-|   |     -> use:['ieee.std_logic_1164', 'ieee.std_logic_arith', 'lib.controller', 'lib.general', 'lib.io']
 |   |     -> libs:['ieee', 'lib']
+|   |     -> use:['ieee.std_logic_1164', 'ieee.std_logic_arith', 'lib.controller', 'lib.general', 'lib.io']
 |   |   |    (Library_unit)
 |   |   |   |    (Primary_unit)
 |   |   |   |   |    (Entity_declaration)
-|   |   |   |   |     -> generic:[{'rx': 'integer'}, {'ry': 'integer'}, {'cpu_num': 'integer'}, {'cpu_lines': 'integer'}, {'py': 'integer'}, {'alien_w': 'integer'}, {'alien_h': 'integer'}, {'player_w': 'integer'}, {'player_h': 'integer'}]
 |   |   |   |   |     -> entity:['spaceinvaders']
 |   |   |   |   |     -> extconstants:[{'ALIENS_PER_LINE': 'generic_constant'}, {'ALIEN_LINES': 'generic_constant'}]
-|   |   |   |   |   |    (Entity_header)
-|   |   |   |   |   |   |    (Port_clause)
-|   |   |   |   |   |   |     -> signallist:[{'CLOCK_24': 'STD_LOGIC_VECTOR'}, {'CLOCK_50': 'STD_LOGIC'}, {'CLOCK_27': 'STD_LOGIC'}, {'KEY': 'STD_LOGIC_VECTOR'}, {'HEX0': 'STD_LOGIC_VECTOR'}, {'HEX1': 'STD_LOGIC_VECTOR'}, {'HEX2': 'STD_LOGIC_VECTOR'}, {'HEX3': 'STD_LOGIC_VECTOR'}, {'LEDG': 'STD_LOGIC_VECTOR'}, {'PS2_DAT': 'STD_LOGIC'}, {'PS2_CLK': 'STD_LOGIC'}, {'VGA_R': 'STD_LOGIC_VECTOR'}, {'VGA_G': 'STD_LOGIC_VECTOR'}, {'VGA_B': 'STD_LOGIC_VECTOR'}, {'VGA_HS': 'STD_LOGIC'}, {'VGA_VS': 'STD_LOGIC'}]
+|   |   |   |   |     -> portlist:[{'CLOCK_24': 'STD_LOGIC_VECTOR'}, {'CLOCK_50': 'STD_LOGIC'}, {'CLOCK_27': 'STD_LOGIC'}, {'KEY': 'STD_LOGIC_VECTOR'}, {'HEX0': 'STD_LOGIC_VECTOR'}, {'HEX1': 'STD_LOGIC_VECTOR'}, {'HEX2': 'STD_LOGIC_VECTOR'}, {'HEX3': 'STD_LOGIC_VECTOR'}, {'LEDG': 'STD_LOGIC_VECTOR'}, {'PS2_DAT': 'STD_LOGIC'}, {'PS2_CLK': 'STD_LOGIC'}, {'VGA_R': 'STD_LOGIC_VECTOR'}, {'VGA_G': 'STD_LOGIC_VECTOR'}, {'VGA_B': 'STD_LOGIC_VECTOR'}, {'VGA_HS': 'STD_LOGIC'}, {'VGA_VS': 'STD_LOGIC'}]
+|   |   |   |   |     -> generic:[{'rx': 'integer'}, {'ry': 'integer'}, {'cpu_num': 'integer'}, {'cpu_lines': 'integer'}, {'py': 'integer'}, {'alien_w': 'integer'}, {'alien_h': 'integer'}, {'player_w': 'integer'}, {'player_h': 'integer'}]
 |   |    (Design_unit)
 |   |   |    (Library_unit)
 |   |   |   |    (Secondary_unit)
 |   |   |   |   |    (Architecture_body)
-|   |   |   |   |     -> entity:['spaceinvaders']
 |   |   |   |   |     -> architecture:['Behavior']
+|   |   |   |   |     -> entity:['spaceinvaders']
 |   |   |   |   |   |    (Architecture_declarative_part)
-|   |   |   |   |   |     -> signallist:[[{'clock_s': 'std_logic'}, {'reset_s': 'std_logic'}, {'reset': 'std_logic'}], [{'state': 'GAME_STATE'}], [{'move_s': 'std_logic'}, {'shot_s': 'std_logic'}, {'shot_e_s': 'std_logic'}], [{'controls': 'std_logic_vector'}], [{'position_x_s': 'integer'}], [{'position_y_s': 'integer'}], [{'shot_y_s': 'integer'}], [{'shot_x_s': 'integer'}], [{'shot_r_s': 'std_logic'}], [{'cpu_arr_x': 'pos_arr_xt'}], [{'cpu_arr_y': 'pos_arr_yt'}], [{'cpu_arr_e': 'std_logic_vector'}], [{'cpu_arr_c': 'std_logic_vector'}], [{'cpu_arr_m': 'std_logic_vector'}], [{'cpu_arr_d': 'std_logic_vector'}], [{'cpu_game_over': 'std_logic_vector'}], [{'turn': 'std_logic'}], [{'shot_enemy_y_s': 'integer'}], [{'shot_enemy_x_s': 'integer'}], [{'shot_enemy_e_s': 'std_logic'}], [{'shot_enemy_r_s': 'std_logic'}], [{'enemy_shooting': 'std_logic'}], [{'clk_enemy_shoot': 'std_logic'}], [{'player_death': 'std_logic'}, {'player_reset': 'std_logic'}], [{'player_death_by_alien': 'std_logic'}], [{'player_exploding': 'std_logic'}, {'pc_dead_delay': 'std_logic'}], [{'pc_state': 'PC_STATE_TYPE'}], [{'game_over': 'std_logic'}, {'game_over_by_lives': 'std_logic'}], [{'game_win': 'std_logic'}], [{'hex_s': 'std_logic_vector'}], [{'rnd_s': 'integer'}, {'cmb_s': 'integer'}], [{'choosen_enemy': 'integer'}], [{'hex0_arr': 'hex_arr_t'}, {'hex1_arr': 'hex_arr_t'}, {'hex2_arr': 'hex_arr_t'}, {'hex3_arr': 'hex_arr_t'}], [{'lives': 'natural'}]]
+|   |   |   |   |   |     -> signallist:[{'clock_s': 'std_logic'}, {'reset_s': 'std_logic'}, {'reset': 'std_logic'}, {'state': 'GAME_STATE'}, {'move_s': 'std_logic'}, {'shot_s': 'std_logic'}, {'shot_e_s': 'std_logic'}, {'controls': 'std_logic_vector'}, {'position_x_s': 'integer'}, {'position_y_s': 'integer'}, {'shot_y_s': 'integer'}, {'shot_x_s': 'integer'}, {'shot_r_s': 'std_logic'}, {'cpu_arr_x': 'pos_arr_xt'}, {'cpu_arr_y': 'pos_arr_yt'}, {'cpu_arr_e': 'std_logic_vector'}, {'cpu_arr_c': 'std_logic_vector'}, {'cpu_arr_m': 'std_logic_vector'}, {'cpu_arr_d': 'std_logic_vector'}, {'cpu_game_over': 'std_logic_vector'}, {'turn': 'std_logic'}, {'shot_enemy_y_s': 'integer'}, {'shot_enemy_x_s': 'integer'}, {'shot_enemy_e_s': 'std_logic'}, {'shot_enemy_r_s': 'std_logic'}, {'enemy_shooting': 'std_logic'}, {'clk_enemy_shoot': 'std_logic'}, {'player_death': 'std_logic'}, {'player_reset': 'std_logic'}, {'player_death_by_alien': 'std_logic'}, {'player_exploding': 'std_logic'}, {'pc_dead_delay': 'std_logic'}, {'pc_state': 'PC_STATE_TYPE'}, {'game_over': 'std_logic'}, {'game_over_by_lives': 'std_logic'}, {'game_win': 'std_logic'}, {'hex_s': 'std_logic_vector'}, {'rnd_s': 'integer'}, {'cmb_s': 'integer'}, {'choosen_enemy': 'integer'}, {'hex0_arr': 'hex_arr_t'}, {'hex1_arr': 'hex_arr_t'}, {'hex2_arr': 'hex_arr_t'}, {'hex3_arr': 'hex_arr_t'}, {'lives': 'natural'}]
 |   |   |   |   |   |   |    (Block_declarative_item)
 |   |   |   |   |   |   |   |    (Type_declaration)
 |   |   |   |   |   |   |   |   |   PC_STATE_TYPE (Identifier)

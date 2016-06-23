@@ -242,6 +242,9 @@ class TreeStorage():
     def extractentityport(self):
         for x in [x for x in self.getAllChildrenOfType("Port_clause")]:
             x.extractsignals()
+            self.data.setdefault("portlist",[]).extend(x.data["signallist"])
+            x.setPurge()
+        self.purge()
      
     def extractarchitecture(self):
         for x in [x for x in self.getAllChildrenOfType("Architecture_body")]:
@@ -258,7 +261,7 @@ class TreeStorage():
             for y in [y for y in self.getAllChildrenOfType("Signal_declaration")]:
                 y.extractsignals()
                 y.setPurge()
-                x.data.setdefault("signallist",[]).append(y.data["signallist"])
+                x.data.setdefault("signallist",[]).extend(y.data["signallist"])
                 y.setPurge()
             x.purge()
             
